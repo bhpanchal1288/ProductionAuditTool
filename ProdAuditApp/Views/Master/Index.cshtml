@@ -1,0 +1,378 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+
+
+@* ************** Content ************** *@
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title m-0 me-2">@masterCode</h5>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="input-group input-group-merge" style="max-width: 500px;">
+                <input type="text" id="masterCodeInput" class="form-control" placeholder="Search..." />
+                <button type="button" class="btn btn-primary" onclick="loadMasterData()">
+                    <i class="icon-base ri ri-search-line me-1"></i>
+                    Load
+                </button>&nbsp;&nbsp;
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("Index", @masterCode.Replace(" ", ""))?Id=0'">
+                    <i class="icon-base ri ri-search-line me-1"></i>
+                    Add New
+                </button>
+            </div>
+            <div class="dropdown">
+                <button class="btn text-body-secondary p-0" type="button" id="masterDataActions" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="icon-base ri ri-more-2-line icon-24px"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="masterDataActions">
+                    <a class="dropdown-item" href="javascript:void(0);" onclick="refreshTable()">
+                        <i class="icon-base ri ri-refresh-line me-1"></i> Refresh
+                    </a>
+                    <a class="dropdown-item" href="javascript:void(0);">
+                        <i class="icon-base ri ri-download-line me-1"></i> Export
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="tableContainer">
+        @{
+            var masterData = ViewData["MasterData"] as dynamic;
+            var masterDataError = ViewData["MasterDataError"] as string;
+        }
+
+        @if (!string.IsNullOrEmpty(masterDataError))
+        {
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="icon-base ri ri-error-warning-line icon-24px me-2"></i>
+                <div>@masterDataError</div>
+            </div>
+        }
+        else if (masterData != null)
+        {
+            @* Server-side rendered data - will be replaced by JavaScript for pagination/sorting *@
+            <div id="serverRenderedData" style="display: none;">
+                @ViewData["MasterDataJson"]
+            </div>
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading master data...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(masterCode))
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading master data...</p>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="icon-base ri ri-database-2-line icon-48px text-body-secondary mb-3"></i>
+                <p class="text-body-secondary">Please enter a Master Code to load data</p>
+            </div>
+        }
+    </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    let currentPage = 1;
+    let currentPageSize = 10;
+    let currentSort = "";
+    let currentDir = "asc";
+    let currentMasterCode = "@masterCode";
+
+    $(document).ready(function () {
+        // Check if server-side data is available
+        const serverRenderedData = $('#serverRenderedData').text();
+        if (serverRenderedData) {
+            try {
+                const serverData = JSON.parse(serverRenderedData);
+                currentPage = @(ViewData["CurrentPage"] ?? 1);
+                currentPageSize = @(ViewData["PageSize"] ?? 10);
+                currentSort = '@(ViewData["Sort"] ?? "")';
+                currentDir = '@(ViewData["Dir"] ?? "asc")';
+                
+                // Use server-rendered data directly
+                if (serverData.columns && serverData.data) {
+                    renderMasterDataTable(serverData);
+                } else {
+                    // Fallback to AJAX call
+                    if (currentMasterCode) {
+                        loadMasterData();
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing server data:', e);
+                // Fallback to AJAX call
+                if (currentMasterCode) {
+                    loadMasterData();
+                }
+            }
+        } else {
+            // No server data, use AJAX if masterCode is available
+            if (currentMasterCode) {
+                loadMasterData();
+            }
+        }
+
+        // Handle Enter key in master code input
+        $('#masterCodeInput').on('keypress', function (e) {
+            if (e.which === 13) {
+                loadMasterData();
+            }
+        });
+    });
+
+    function loadMasterData() {
+        const masterCode = masterCode;
+        if (!masterCode) {
+            showError('Please enter a Master Code');
+            return;
+        }
+
+        currentMasterCode = masterCode;
+            currentSearch = searchText;
+        currentPage = 1;
+        renderTable();
+    }
+
+    function refreshTable() {
+        if (currentMasterCode) {
+            renderTable();
+        }
+    }
+
+    function renderTable() {
+        $('#tableContainer').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Loading master data...</p>
+            </div>
+        `);
+
+        $.ajax({
+            url: '@Url.Action("GetMasterData", "Master")',
+            type: 'GET',
+            data: {
+                masterCode: currentMasterCode,
+                page: currentPage,
+                pageSize: currentPageSize,
+                sort: currentSort,
+                dir: currentDir
+            },
+            success: function (response) {
+                if (response.columns && response.data) {
+                    renderMasterDataTable(response);
+                } else {
+                    showError('Invalid response format');
+                }
+            },
+            error: function (xhr, status, error) {
+                let errorMessage = 'An error occurred while loading data';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                showError(errorMessage);
+            }
+        });
+    }
+
+    function renderMasterDataTable(response) {
+        const columns = response.columns;
+        const data = response.data;
+        const totalRecords = response.totalRecords || 0;
+        const totalPages = Math.ceil(totalRecords / currentPageSize);
+
+        let html = '<div class="table-responsive text-nowrap">';
+        html += '<table class="table">';
+        
+        // Table Header
+        html += '<thead><tr>';
+        columns.forEach(function (column, index) {
+                const hiddenClass = index === 0 ? 'd-none' : '';
+            if (column.isSortable) {
+                const sortIcon = currentSort === column.columnName 
+                    ? (currentDir === 'asc' ? '▲' : '▼') 
+                    : '';
+                    
+                    html += `<th class="text-truncate ${hiddenClass}" style="cursor: pointer;" onclick="sortTable('${column.columnName}')">
+                    ${column.displayName || column.columnName} ${sortIcon}
+                </th>`;
+            } else {
+                    html += `<th class="text-truncate ${hiddenClass}">${column.displayName || column.columnName}</th>`;
+            }
+        });
+        html += '<th class="text-truncate">Actions</th>';
+        html += '</tr></thead>';
+
+        // Table Body
+        html += '<tbody class="table-border-bottom-0">';
+
+            const editBaseUrl = '@Url.Action("Index", @masterCode?.Replace(" ", "").Trim())';
+        if (data && data.length > 0) {
+            data.forEach(function (row) {
+                const firstColumnName = columns[0].columnName;
+                const idValue = row[firstColumnName];
+                    const editUrl = `${editBaseUrl}?id=${idValue}`;
+                html += '<tr>';
+                columns.forEach(function (column, index) {
+                        
+                    const value = getValueFromRow(row, column.columnName);
+                        const hiddenClass = index === 0 ? 'd-none' : '';
+                        html += `<td class="text-truncate ${hiddenClass}">${formatCellValue(value, column.dataType)}</td>`;
+                });
+                html += '<td>';
+                html += '<div class="dropdown">';
+                html += '<button type="button" class="btn p-0 dropdown-toggle hide-arrow shadow-none" data-bs-toggle="dropdown">';
+                html += '<i class="icon-base ri ri-more-2-line icon-18px"></i>';
+                html += '</button>';
+                html += '<div class="dropdown-menu">';
+                html += '<a class="dropdown-item" href="' + editUrl + '">';
+                html += '<i class="icon-base ri ri-pencil-line icon-18px me-1"></i> Edit';
+                html += '</a>';
+                html += '<a class="dropdown-item" href="javascript:void(0);">';
+                html += '<i class="icon-base ri ri-delete-bin-6-line icon-18px me-1"></i> Delete';
+                html += '</a>';
+                html += '</div>';
+                html += '</div>';
+                html += '</td>';
+                html += '</tr>';
+            });
+        } else {
+            html += `<tr><td colspan="${columns.length + 1}" class="text-center py-4">
+                <i class="icon-base ri ri-database-2-line icon-48px text-body-secondary mb-2 d-block"></i>
+                <p class="text-body-secondary mb-0">No records found</p>
+            </td></tr>`;
+        }
+        html += '</tbody>';
+        html += '</table>';
+        html += '</div>'; // Close table-responsive
+
+        // Pagination
+        if (totalPages > 1) {
+            html += '<div class="d-flex justify-content-between align-items-center mt-4">';
+            html += `<div class="text-body-secondary">
+                Showing ${((currentPage - 1) * currentPageSize) + 1} to ${Math.min(currentPage * currentPageSize, totalRecords)} of ${totalRecords} entries
+            </div>`;
+            html += '<nav>';
+            html += '<ul class="pagination mb-0">';
+            
+            // Previous button
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">`;
+            html += `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})"><</a>`;
+            html += '</li>';
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">`;
+                    html += `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
+                    html += '</li>';
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            // Next button
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">`;
+            html += `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">></a>`;
+            html += '</li>';
+            
+            html += '</ul>';
+            html += '</nav>';
+            html += '</div>';
+        }
+
+        $('#tableContainer').html(html);
+    }
+
+    function getValueFromRow(row, columnName) {
+        if (row[columnName] !== undefined) {
+            return row[columnName];
+        }
+        // Try case-insensitive match
+        for (let key in row) {
+            if (key.toLowerCase() === columnName.toLowerCase()) {
+                return row[key];
+            }
+        }
+        return null;
+    }
+
+    function formatCellValue(value, dataType) {
+        if (value === null || value === undefined) {
+            return '<span class="text-body-secondary">-</span>';
+        }
+
+        if (dataType && dataType.toLowerCase() === 'bit' || dataType.toLowerCase() === 'boolean') {
+            return value === true || value === 1 || value === '1' || value === 'true'
+                ? '<span class="badge bg-label-success rounded-pill">Yes</span>'
+                : '<span class="badge bg-label-secondary rounded-pill">No</span>';
+        }
+
+        if (dataType && (dataType.toLowerCase().includes('date') || dataType.toLowerCase().includes('time'))) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+        }
+
+        return escapeHtml(String(value));
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function sortTable(columnName) {
+        if (currentSort === columnName) {
+            currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort = columnName;
+            currentDir = 'asc';
+        }
+        currentPage = 1;
+        renderTable();
+    }
+
+    function changePage(page) {
+        if (page >= 1) {
+            currentPage = page;
+            renderTable();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function showError(message) {
+        $('#tableContainer').html(`
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="icon-base ri ri-error-warning-line icon-24px me-2"></i>
+                <div>${escapeHtml(message)}</div>
+            </div>
+        `);
+    }
+
+
+</script>
+}

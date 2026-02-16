@@ -1,0 +1,88 @@
+﻿@using ProdAuditApp.Data.Model.Domain
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@model Group
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            const alertNode = document.getElementById('successAlert');
+            if (alertNode) {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertNode);
+                alert.close();
+            }
+        }, 5000); // 15 seconds
+    </script>
+}
+
+@{
+    TempData.Remove("SuccessMessage");
+}
+
+@* ************** Content ************** *@
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="col-xxl">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Group</h5>
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Group" })">Back to Search</a>
+            </div>
+            <div class="card-body">
+                <form asp-action="Save" asp-controller="Group" method="post">
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtGroupCode">Group Code</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="groupCode" class="form-control" id="txtGroupCode" placeholder="Group Code" />
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtGroupName">Group Name</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="groupName" class="form-control" id="txtGroupName" placeholder="Group Name" />
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtDescription">Description</label>
+                        <div class="col-sm-4">
+                            <textarea id="txtDescription" asp-for="groupDesc" class="form-control" placeholder="Description"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4">
+                            <input type="hidden" asp-for="groupId" id="hdnGroupId" />
+                        </div>
+                    </div>
+                    <div class="row justify-content-end">
+                        <div class="col-sm-10">
+                            <button id="btnSave" type="submit" class="btn btn-primary">Save</button>
+                            <button id="btnCancel" asp-action="Index" class="btn btn-primary">Cancel</button>
+                            @if (Model?.groupId > 0)
+                            {
+                                <button type="submit"
+                                        formaction="@Url.Action("Delete", "Group")"
+                                        formmethod="post"
+                                        class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete this group?');">
+                                    Delete
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+</div>
+

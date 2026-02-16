@@ -1,0 +1,71 @@
+@using ProdAuditApp.Data.Model.Domain
+@using System
+@using System.Linq
+@model List<Menu>
+
+@{
+  TempData.Keep();
+  string currentPage = ViewContext.HttpContext.Request.Path.ToString() ?? string.Empty;
+}
+
+
+<!-- Menu -->
+@* ! Do this simple *@
+<aside id="layout-menu" class="layout-menu menu-vertical menu">
+
+  @* ! Hide app brand if navbar-full *@
+  <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
+    <a asp-controller="Dashboards" asp-action="Index" class="app-brand-link gap-xl-0 gap-2">
+      <span class="app-brand-logo demo me-1">
+        @await Html.PartialAsync("../_Partials/_Macros")
+      </span>
+      <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+    </a>
+
+    @* <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+      <i class="menu-toggle-icon d-xl-inline-block align-middle"></i>
+    </a> *@
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  @* ! Full version menu-items *@
+  @if (Model?.Any() == true)
+  {
+    <ul class="menu-inner py-1">
+      @{
+        var parentMenu = Model.Where(p => p.parentmenuid == 0).OrderBy(p => p.menuorder).ToList();
+      }
+
+      @foreach (var item in parentMenu)
+      {
+        <li class='menu-item@(currentPage.StartsWith("/" + item.filtermenuname) ? " active open" : "")'>
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bx-layout"></i>
+            <div>@item.menuname</div>
+          </a>
+
+          @{
+            var subMenu = Model.Where(p => p.parentmenuid == item.menuid).OrderBy(p => p.menuorder).ToList();
+          }
+          <ul class="menu-sub">
+            @foreach (var subItem in subMenu)
+            {
+              <li class='menu-item@(currentPage.Equals("/" + subItem.pagename, StringComparison.OrdinalIgnoreCase) ? " active" : "")'>
+                                <a href="@Url.Action("Index", "Master", new { masterCode = @subItem.menuname })" class="menu-link">
+                  <div>@subItem.menuname</div>
+                </a>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  }
+  else
+  {
+    <div class="px-3 py-4 text-muted small">No menu assigned.</div>
+  }
+
+</aside>
+<!-- / Menu -->
