@@ -17,9 +17,9 @@ namespace ProdAuditApp.Data.Repository.VendorRepository
             return result.FirstOrDefault();
         }
 
-        public async Task InsertAsync(Vendor vendor)
+        public async Task<ITMessage> InsertAsync(Vendor vendor)
         {
-            await _db.Save("usp_DML_Vendor",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Vendor",
                             new
                             {
                                 vendor.vendorId,
@@ -34,11 +34,16 @@ namespace ProdAuditApp.Data.Repository.VendorRepository
                                 vendor.updatedBy,
                                 RequestType = "Insert"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Insert failed"
+            };
         }
 
-        public async Task UpdateAsync(Vendor vendor)
+        public async Task<ITMessage> UpdateAsync(Vendor vendor)
         {
-            await _db.Save("usp_DML_Vendor",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Vendor",
                             new
                             {
                                 vendor.vendorId,
@@ -53,11 +58,16 @@ namespace ProdAuditApp.Data.Repository.VendorRepository
                                 vendor.updatedBy,
                                 RequestType = "Update"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Update failed"
+            };
         }
 
-        public async Task DeleteAsync(Vendor vendor)
+        public async Task<ITMessage> DeleteAsync(Vendor vendor)
         {
-            await _db.Save("usp_DML_Vendor",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Vendor",
                             new
                             {
                                 vendor.vendorId,
@@ -72,6 +82,11 @@ namespace ProdAuditApp.Data.Repository.VendorRepository
                                 vendor.updatedBy,
                                 RequestType = "Delete"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Delete failed"
+            };
         }
 
     }

@@ -17,9 +17,14 @@
   <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
     <a asp-controller="Dashboards" asp-action="Index" class="app-brand-link gap-xl-0 gap-2">
       <span class="app-brand-logo demo me-1">
-        @await Html.PartialAsync("../_Partials/_Macros")
+        @*@await Html.PartialAsync("../_Partials/_Macros") *@
+                <img src="@Url.Content("~/img/icons/misc/aviato.png")"
+                     alt="Audit Pro Logo"
+                     class="img-fluid"
+                     style="max-height:50px;" />
       </span>
-      <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+            @*<span class="app-brand-text demo menu-text fw-semibold ms-2">AuditPro</span>*@
+            <span class="app-brand-text demo menu-text">AuditPro</span>
     </a>
 
     @* <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

@@ -24,9 +24,9 @@ namespace ProdAuditApp.Data.Repository.GroupRepository
         //    return result.FirstOrDefault();
         //}
 
-        public async Task InsertAsync(Group group)
+        public async Task<ITMessage> InsertAsync(Group group)
         {
-            await _db.Save("usp_DML_Group",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Group",
                             new
                             {
                                 group.groupId,
@@ -37,11 +37,16 @@ namespace ProdAuditApp.Data.Repository.GroupRepository
                                 group.updatedBy,
                                 RequestType = "Insert"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Insert failed"
+            };
         }
 
-        public async Task UpdateAsync(Group group)
+        public async Task<ITMessage> UpdateAsync(Group group)
         {
-            await _db.Save("usp_DML_Group",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Group",
                             new
                             {
                                 group.groupId,
@@ -52,11 +57,16 @@ namespace ProdAuditApp.Data.Repository.GroupRepository
                                 group.updatedBy,
                                 RequestType = "Update"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Update failed"
+            };
         }
 
-        public async Task DeleteAsync(Group group)
+        public async Task<ITMessage> DeleteAsync(Group group)
         {
-            await _db.Save("usp_DML_Group",
+            var res = await _db.SaveData<ITMessage>("usp_DML_Group",
                             new
                             {
                                 group.groupId,
@@ -67,6 +77,11 @@ namespace ProdAuditApp.Data.Repository.GroupRepository
                                 group.updatedBy,
                                 RequestType = "Delete"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Delete failed"
+            };
         }
     }
 }

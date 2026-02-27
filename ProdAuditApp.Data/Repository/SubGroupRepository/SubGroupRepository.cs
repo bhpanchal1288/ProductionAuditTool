@@ -1,23 +1,14 @@
 ﻿using ProdAuditApp.Data.DataAccess;
 using ProdAuditApp.Data.Model.Domain;
-using ProdAuditApp.Data.Repository.DropdownRepository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace ProdAuditApp.Data.Repository.SubGroupRepository
 {
     public class SubGroupRepository : ISubGroupRepository
     {
         private readonly ISqlDataAccess _db;
-        private readonly IDropdownRepository _dropdown;
-        public SubGroupRepository(ISqlDataAccess db, IDropdownRepository dropdown) 
+        public SubGroupRepository(ISqlDataAccess db) 
         { 
             _db = db; 
-            _dropdown = dropdown;
         }
 
         public async Task<SubGroup> GetByIdAsync(int subGroupId)
@@ -26,24 +17,41 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
             return result.FirstOrDefault();
         }
 
-        public async Task<List<DropdownConfig>> GetDropdownItemsAsync(string cmbName, string FormName, string expr1, string expr2, string expr3, string expr4, string expr5)
+        public async Task<IEnumerable<DropdownConfig>> GetGroupDropdownItemsAsync()
         {
             var result = await _db.GetData<DropdownConfig, dynamic>("usp_Bind_DropDown"
-                , new {
-                    cmbName = cmbName,
-                    FormName = FormName,
-                    expr1 = expr1,
-                    expr2 = expr2,
-                    expr3 = expr3,
-                    expr4 = expr4,
-                    expr5 = expr5
+                , new
+                {
+                    cmbName = "GROUP",
+                    FormName = "BLANK",
+                    expr1 = (string)null,
+                    expr2 = (string)null,
+                    expr3 = (string)null,
+                    expr4 = (string)null,
+                    expr5 = (string)null
                 });
             return result.ToList();
         }
 
-        public async Task InsertAsync(SubGroup subGroup)
+        public async Task<IEnumerable<DropdownConfig>> GetCategoryDropdownItemsAsync()
         {
-            await _db.Save("usp_DML_SubGroup",
+            var result = await _db.GetData<DropdownConfig, dynamic>("usp_Bind_DropDown"
+                , new
+                {
+                    cmbName = "SubGroupCategory",
+                    FormName = "BLANK",
+                    expr1 = (string)null,
+                    expr2 = (string)null,
+                    expr3 = (string)null,
+                    expr4 = (string)null,
+                    expr5 = (string)null
+                });
+            return result.ToList();
+        }
+
+        public async Task<ITMessage> InsertAsync(SubGroup subGroup)
+        {
+            var res = await _db.SaveData<ITMessage>("usp_DML_SubGroup",
                             new
                             {
                                 subGroup.subgroupid,
@@ -56,11 +64,16 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
                                 subGroup.updatedby,
                                 RequestType = "Insert"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Insert failed"
+            };
         }
 
-        public async Task UpdateAsync(SubGroup subGroup)
+        public async Task<ITMessage> UpdateAsync(SubGroup subGroup)
         {
-            await _db.Save("usp_DML_SubGroup",
+            var res = await _db.SaveData<ITMessage>("usp_DML_SubGroup",
                             new
                             {
                                 subGroup.subgroupid,
@@ -73,11 +86,16 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
                                 subGroup.updatedby,
                                 RequestType = "Update"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Update failed"
+            };
         }
 
-        public async Task DeleteAsync(SubGroup subGroup)
+        public async Task<ITMessage> DeleteAsync(SubGroup subGroup)
         {
-            await _db.Save("usp_DML_SubGroup",
+            var res = await _db.SaveData<ITMessage>("usp_DML_SubGroup",
                             new
                             {
                                 subGroup.subgroupid,
@@ -90,6 +108,11 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
                                 subGroup.updatedby,
                                 RequestType = "Delete"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Delete failed"
+            };
         }
     }
 }

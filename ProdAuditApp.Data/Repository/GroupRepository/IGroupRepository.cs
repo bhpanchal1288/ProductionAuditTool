@@ -6,8 +6,8 @@ namespace ProdAuditApp.Data.Repository.GroupRepository
     {
         Task<Group> GetByIdAsync(int groupId);
         //Task<IEnumerable<Group>> GetByMasterCodeAsync(string masterCode);
-        Task InsertAsync(Group group);
-        Task UpdateAsync(Group group);
-        Task DeleteAsync(Group group);
+        Task<ITMessage> InsertAsync(Group group);
+        Task<ITMessage> UpdateAsync(Group group);
+        Task<ITMessage> DeleteAsync(Group group);
     }
 }

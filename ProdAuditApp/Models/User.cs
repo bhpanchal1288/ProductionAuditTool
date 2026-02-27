@@ -1,6 +1,6 @@
 namespace ProdAuditApp.UI.Models;
 
-public class User
+public class User1
 {
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
@@ -12,6 +12,7 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
 }
+
 
 
 

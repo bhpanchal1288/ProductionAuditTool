@@ -6,8 +6,10 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
     {
         Task<SubGroup> GetByIdAsync(int groupId);
         //Task<IEnumerable<Group>> GetByMasterCodeAsync(string masterCode);
-        Task InsertAsync(SubGroup subGroup);
-        Task UpdateAsync(SubGroup subGroup);
-        Task DeleteAsync(SubGroup subGroup);
+        Task<IEnumerable<DropdownConfig>> GetGroupDropdownItemsAsync();
+        Task<IEnumerable<DropdownConfig>> GetCategoryDropdownItemsAsync();
+        Task<ITMessage> InsertAsync(SubGroup subGroup);
+        Task<ITMessage> UpdateAsync(SubGroup subGroup);
+        Task<ITMessage> DeleteAsync(SubGroup subGroup);
     }
 }

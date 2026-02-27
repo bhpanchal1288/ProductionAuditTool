@@ -56,8 +56,8 @@ public class AuthController : Controller
             TempData["groupid"] = Convert.ToString(authResult.groupid);
             TempData["firstname"] = Convert.ToString(authResult.firstname);
             TempData["lastname"] = Convert.ToString(authResult.lastname);
-            TempData["stafftype"] = Convert.ToString(authResult.stafftype);
-            TempData["designation"] = Convert.ToString(authResult.designation);
+            //TempData["stafftype"] = Convert.ToString(authResult.stafftype);
+            //TempData["designation"] = Convert.ToString(authResult.designation);
             TempData["mobile"] = Convert.ToString(authResult.mobile);
             TempData["emailid"] = Convert.ToString(authResult.emailid);
             TempData["password"] = Convert.ToString(authResult.password);

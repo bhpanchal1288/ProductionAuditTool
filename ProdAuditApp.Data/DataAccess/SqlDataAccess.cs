@@ -1,6 +1,8 @@
-﻿using Dapper;
+﻿using Azure;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using ProdAuditApp.Data.Model.Domain;
 using System.Data;
 
 namespace ProdAuditApp.Data.DataAccess
@@ -24,6 +26,13 @@ namespace ProdAuditApp.Data.DataAccess
         {
             using IDbConnection connection = new SqlConnection(_config.GetConnectionString(connectionId));
             await connection.ExecuteAsync(spName, parameters, commandType: CommandType.StoredProcedure);
+        }
+
+        public async Task<ITMessage> SaveData<ITMessage>(string spName, object parameters, string connectionId = "DefaultConnection")
+        {
+            using IDbConnection connection = new SqlConnection(_config.GetConnectionString(connectionId));
+            var result = await connection.QueryFirstOrDefaultAsync<ITMessage>(spName, parameters, commandType: CommandType.StoredProcedure);
+            return result;
         }
 
 

@@ -18,9 +18,9 @@ namespace ProdAuditApp.Data.Repository.ProductionHouseRepository
             return result.FirstOrDefault();
         }
 
-        public async Task InsertAsync(ProductionHouse productionHouse)
+        public async Task<ITMessage> InsertAsync(ProductionHouse productionHouse)
         {
-            await _db.Save("usp_DML_ProductionHouse",
+            var res = await _db.SaveData<ITMessage>("usp_DML_ProductionHouse",
                             new
                             {
                                 productionHouse.phId,
@@ -35,11 +35,16 @@ namespace ProdAuditApp.Data.Repository.ProductionHouseRepository
                                 productionHouse.updatedBy,
                                 RequestType = "Insert"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Insert failed"
+            };
         }
 
-        public async Task UpdateAsync(ProductionHouse productionHouse)
+        public async Task<ITMessage> UpdateAsync(ProductionHouse productionHouse)
         {
-            await _db.Save("usp_DML_ProductionHouse",
+            var res = await _db.SaveData<ITMessage>("usp_DML_ProductionHouse",
                             new
                             {
                                 productionHouse.phId,
@@ -54,11 +59,16 @@ namespace ProdAuditApp.Data.Repository.ProductionHouseRepository
                                 productionHouse.updatedBy,
                                 RequestType = "Update"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Update failed"
+            };
         }
 
-        public async Task DeleteAsync(ProductionHouse productionHouse)
+        public async Task<ITMessage> DeleteAsync(ProductionHouse productionHouse)
         {
-            await _db.Save("usp_DML_ProductionHouse",
+            var res = await _db.SaveData<ITMessage>("usp_DML_ProductionHouse",
                             new
                             {
                                 productionHouse.phId,
@@ -73,6 +83,11 @@ namespace ProdAuditApp.Data.Repository.ProductionHouseRepository
                                 productionHouse.updatedBy,
                                 RequestType = "Delete"
                             });
+            return res ?? new ITMessage
+            {
+                i_IDENTITY = 0,
+                msg = "Delete failed"
+            };
         }
     }
 }

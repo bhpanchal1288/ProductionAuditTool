@@ -6,7 +6,7 @@
       <span class="app-brand-logo demo">
         @await Html.PartialAsync("../_Partials/_Macros")
       </span>
-      <span class="app-brand-text demo menu-text fw-bold">@TempData.Peek("appName")</span>
+      <span class="app-brand-text demo menu-text fw-bold">Audit Pro</span>
     </a>
   </div>
 }
@@ -58,8 +58,8 @@
                 </div>
               </div>
               <div class="flex-grow-1">
-                <h6 class="mb-0 small">John Doe</h6>
-                <small class="text-body-secondary">Admin</small>
+                <h6 class="mb-0 small">@TempData.Peek("firstname") @TempData.Peek("lastname") </h6>
+                @* <small class="text-body-secondary">Admin</small> *@
               </div>
             </div>
           </a>
@@ -67,7 +67,7 @@
         <li>
           <div class="dropdown-divider"></div>
         </li>
-        <li>
+        @* <li>
           <a class="dropdown-item" asp-controller="Pages" asp-action="ProfileUser">
             <i class="icon-base ri ri-user-3-line icon-22px me-2"></i>
             <span class="align-middle">My Profile</span>
@@ -87,7 +87,7 @@
               <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger h-px-20 d-flex align-items-center justify-content-center">4</span>
             </span>
           </a>
-        </li>
+        </li> *@
         <li>
           <div class="d-grid px-4 pt-2 pb-1">
             <a class="btn btn-danger d-flex" href="javascript:void();">

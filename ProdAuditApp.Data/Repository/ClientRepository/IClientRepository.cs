@@ -5,8 +5,8 @@ namespace ProdAuditApp.Data.Repository.ClientRepository
     public interface IClientRepository
     {
         Task<Client> GetByIdAsync(int clientId);
-        Task InsertAsync(Client client);
-        Task UpdateAsync(Client client);
-        Task DeleteAsync(Client client);
+        Task<ITMessage> InsertAsync(Client client);
+        Task<ITMessage> UpdateAsync(Client client);
+        Task<ITMessage> DeleteAsync(Client client);
     }
 }

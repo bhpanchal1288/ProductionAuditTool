@@ -2,27 +2,26 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ProdAuditApp.Data.Model.Domain;
 using ProdAuditApp.Data.Repository.SubGroupRepository;
+using ProdAuditApp.Data.Repository.UserRepository;
 
 namespace ProdAuditApp.UI.Controllers
 {
-    public class SubGroupController : Controller
+    public class UserController : Controller
     {
-        private readonly ISubGroupRepository _subGroupRepository;
-        public SubGroupController(ISubGroupRepository subGroupRepository)
+        private readonly IUserRepository _userRepository;
+
+        public UserController(IUserRepository userRepository)
         {
-            _subGroupRepository = subGroupRepository;
+            _userRepository = userRepository;
         }
         public async Task<IActionResult> Index(int Id)
         {
-            var groupData = await _subGroupRepository.GetGroupDropdownItemsAsync();
+            var groupData = await _userRepository.GetUserGroupDropdownItemsAsync();
             ViewBag.GroupList = new SelectList(groupData, "valueId", "valueDec");
-
-            var categoryData = await _subGroupRepository.GetCategoryDropdownItemsAsync();
-            ViewBag.CategoryList = new SelectList(categoryData, "valueId", "valueDec");
 
             if (Id != 0)
             {
-                var data = await _subGroupRepository.GetByIdAsync(Id);
+                var data = await _userRepository.GetByIdAsync(Id);
                 if (data == null)
                 {
                     return NotFound();
@@ -36,41 +35,26 @@ namespace ProdAuditApp.UI.Controllers
             }
         }
 
-        public async Task<IActionResult> GetGroupDropdownDataAsync()
-        {
-            var groupData = await _subGroupRepository.GetGroupDropdownItemsAsync();
-            ViewBag.GroupList = new SelectList(groupData, "valueId", "valueDec");
-            return View();
-        }
-
-        public async Task<IActionResult> GetCategoryDropdownDataAsync()
-        {
-            var categoryData = await _subGroupRepository.GetCategoryDropdownItemsAsync();
-            ViewBag.CategoryList = new SelectList(categoryData, "valueId", "valueDec");
-            return View();
-        }
-
-
         //[HttpPost]
-        //public async Task<IActionResult> Save(SubGroup subGroup)
+        //public async Task<IActionResult> Save(User user)
         //{
         //    try
         //    {
         //        var userID = Convert.ToInt32(TempData["UserId"]);
-        //        if (subGroup.subgroupid == 0)
+        //        if (user.userid == 0)
         //        {
-        //            subGroup.createdby = Convert.ToInt32(userID);
-        //            var response = await _subGroupRepository.InsertAsync(subGroup);
-        //            TempData["SuccessMessage"] = response.msg;
+        //            user.createdby = Convert.ToInt32(userID);
+        //            await _userRepository.InsertAsync(user);
+        //            TempData["SuccessMessage"] = "User created successfully.";
         //        }
         //        else
         //        {
-        //            subGroup.updatedby = Convert.ToInt32(userID);
-        //            var response = await _subGroupRepository.UpdateAsync(subGroup);
-        //            TempData["SuccessMessage"] = response.msg;
+        //            user.updatedby = Convert.ToInt32(userID);
+        //            await _userRepository.UpdateAsync(user);
+        //            TempData["SuccessMessage"] = "User updated successfully.";
         //        }
         //        //return Ok();
-        //        return RedirectToAction("Index", "SubGroup", new { id = 0 });
+        //        return RedirectToAction("Index", "User", new { id = 0 });
         //    }
         //    catch (Exception ex)
         //    {
@@ -80,7 +64,7 @@ namespace ProdAuditApp.UI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(SubGroup subGroup)
+        public async Task<IActionResult> Save(User user)
         {
             //Model validation (Data Annotations)
             if (!ModelState.IsValid)
@@ -106,12 +90,12 @@ namespace ProdAuditApp.UI.Controllers
             {
                 ITMessage response;
 
-                if (subGroup.subgroupid == 0 || subGroup.subgroupid == null)
+                if (user.userid == 0 || user.userid == null)
                 {
                     //Insert Validation
-                    subGroup.createdby = userId;
+                    user.createdby = userId;
 
-                    response = await _subGroupRepository.InsertAsync(subGroup);
+                    response = await _userRepository.InsertAsync(user);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -122,9 +106,9 @@ namespace ProdAuditApp.UI.Controllers
                 else
                 {
                     // 4️⃣ Update Validation
-                    subGroup.updatedby = userId;
+                    user.updatedby = userId;
 
-                    response = await _subGroupRepository.UpdateAsync(subGroup);
+                    response = await _userRepository.UpdateAsync(user);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -134,7 +118,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "SubGroup");
+                return RedirectToAction("Index", "User");
             }
             catch (Exception ex)
             {
@@ -146,17 +130,17 @@ namespace ProdAuditApp.UI.Controllers
         }
 
         //[HttpPost]
-        //public async Task<IActionResult> Delete(SubGroup subGroup)
+        //public async Task<IActionResult> Delete(User user)
         //{
         //    var userID = Convert.ToInt32(TempData["UserId"]);
-        //    subGroup.updatedby = Convert.ToInt32(userID);
-        //    var response = await _subGroupRepository.DeleteAsync(subGroup);
-        //    TempData["SuccessMessage"] = response.msg;
-        //    return RedirectToAction("Index", "SubGroup", new { id = 0 });
+        //    user.updatedby = Convert.ToInt32(userID);
+        //    await _userRepository.DeleteAsync(user);
+        //    TempData["SuccessMessage"] = "User deleted successfully.";
+        //    return RedirectToAction("Index", "User", new { id = 0 });
         //}
 
         [HttpPost]
-        public async Task<IActionResult> Delete(SubGroup subGroup)
+        public async Task<IActionResult> Delete(User user)
         {
 
             //Model validation (Data Annotations)
@@ -184,8 +168,8 @@ namespace ProdAuditApp.UI.Controllers
                 ITMessage response;
 
                 //var userID = Convert.ToInt32(TempData["UserId"]);
-                subGroup.updatedby = Convert.ToInt32(userId);
-                response = await _subGroupRepository.DeleteAsync(subGroup);
+                user.updatedby = Convert.ToInt32(userId);
+                response = await _userRepository.DeleteAsync(user);
 
                 if (response == null || response.i_IDENTITY <= 0)
                 {
@@ -194,7 +178,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "SubGroup", new { id = 0 });
+                return RedirectToAction("Index", "User", new { id = 0 });
             }
             catch (Exception ex)
             {

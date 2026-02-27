@@ -2,13 +2,14 @@
 
 namespace ProdAuditApp.Data.Model.Domain
 {
-    public class Group
+    public class UserGroup
     {
         public int? groupId { get; set; }
-        
-        [Required(ErrorMessage = "Group Code is required")]
-        public string groupCode { get; set; }
 
+        [Required(ErrorMessage = "Group Code is required")]
+        //[StringLength(10, ErrorMessage = "Group Code cannot exceed 10 characters")]
+        public string groupCode { get; set; }
+        
         [Required(ErrorMessage = "Group Name is required")]
         public string groupName { get; set; }
         public string? groupDesc { get; set; }

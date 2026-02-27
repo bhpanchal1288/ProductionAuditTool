@@ -1,6 +1,6 @@
 ﻿@using ProdAuditApp.Data.Model.Domain
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
-@model Group
+@model UserGroup
 @{
     ViewData["Title"] = ViewData["MasterCode"];
     Layout = "_ContentNavbarLayout";
@@ -35,11 +35,13 @@
     <div class="col-xxl">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="mb-0">Group</h5>
-                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Group" })">Back to Search</a>
+                <h5 class="mb-0">User Group</h5>
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "User Group" })">Back to Search</a>
             </div>
             <div class="card-body">
-                <form asp-action="Save" asp-controller="Group" method="post">
+                <form asp-action="Save" asp-controller="UserGroup" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                     <div class="row mb-4">
                         <label class="col-sm-2 col-form-label" for="txtGroupCode">Group Code</label>
                         <div class="col-sm-4">
@@ -62,7 +64,7 @@
                     </div>
                     <div class="row mb-4">
                         <div class="col-sm-4">
-                            <input type="hidden" asp-for="groupId" id="hdnGroupId" />
+                            <input type="hidden" asp-for="groupId" id="hdnGroupId" value="@(Model?.groupId ?? 0)" />
                         </div>
                     </div>
                     <div class="row justify-content-end">
@@ -72,10 +74,10 @@
                             @if (Model?.groupId > 0)
                             {
                                 <button type="submit"
-                                        formaction="@Url.Action("Delete", "Group")"
+                                        formaction="@Url.Action("Delete", "UserGroup")"
                                         formmethod="post"
                                         class="btn btn-danger"
-                                        onclick="return confirm('Are you sure you want to delete this group?');">
+                                        onclick="return confirm('Are you sure you want to delete this user group?');">
                                     Delete
                                 </button>
                             }

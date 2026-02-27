@@ -1,86 +1,77 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using ProdAuditApp.Data.Model.Domain;
-using ProdAuditApp.Data.Repository.SubGroupRepository;
+using ProdAuditApp.Data.Repository.UserGroupRepository;
 
 namespace ProdAuditApp.UI.Controllers
 {
-    public class SubGroupController : Controller
+    public class UserGroupController : Controller
     {
-        private readonly ISubGroupRepository _subGroupRepository;
-        public SubGroupController(ISubGroupRepository subGroupRepository)
+        private readonly IUserGroupRepository _userGroupRepository;
+        public UserGroupController(IUserGroupRepository userGroupRepository)
         {
-            _subGroupRepository = subGroupRepository;
+            _userGroupRepository = userGroupRepository;
         }
         public async Task<IActionResult> Index(int Id)
         {
-            var groupData = await _subGroupRepository.GetGroupDropdownItemsAsync();
-            ViewBag.GroupList = new SelectList(groupData, "valueId", "valueDec");
-
-            var categoryData = await _subGroupRepository.GetCategoryDropdownItemsAsync();
-            ViewBag.CategoryList = new SelectList(categoryData, "valueId", "valueDec");
-
-            if (Id != 0)
+            try
             {
-                var data = await _subGroupRepository.GetByIdAsync(Id);
+                if (Id <= 0)
+                {
+                    return View(); // New record screen
+                }
+
+                var data = await _userGroupRepository.GetByIdAsync(Id);
+
                 if (data == null)
                 {
-                    return NotFound();
+                    return NotFound($"Record with Id {Id} not found.");
                 }
-                //return Json(data);
+
                 return View(data);
             }
-            else
+            catch (SqlException ex)
             {
-                return View();
+                // Log DB error
+                return StatusCode(500, "Database error occurred.");
+            }
+            catch (Exception ex)
+            {
+                // Log general error
+                return StatusCode(500, "An unexpected error occurred.");
             }
         }
 
-        public async Task<IActionResult> GetGroupDropdownDataAsync()
-        {
-            var groupData = await _subGroupRepository.GetGroupDropdownItemsAsync();
-            ViewBag.GroupList = new SelectList(groupData, "valueId", "valueDec");
-            return View();
-        }
-
-        public async Task<IActionResult> GetCategoryDropdownDataAsync()
-        {
-            var categoryData = await _subGroupRepository.GetCategoryDropdownItemsAsync();
-            ViewBag.CategoryList = new SelectList(categoryData, "valueId", "valueDec");
-            return View();
-        }
-
-
         //[HttpPost]
-        //public async Task<IActionResult> Save(SubGroup subGroup)
+        //public async Task<IActionResult> Save(UserGroup userGroup)
         //{
-        //    try
+        //    if (!ModelState.IsValid)
         //    {
-        //        var userID = Convert.ToInt32(TempData["UserId"]);
-        //        if (subGroup.subgroupid == 0)
-        //        {
-        //            subGroup.createdby = Convert.ToInt32(userID);
-        //            var response = await _subGroupRepository.InsertAsync(subGroup);
-        //            TempData["SuccessMessage"] = response.msg;
-        //        }
-        //        else
-        //        {
-        //            subGroup.updatedby = Convert.ToInt32(userID);
-        //            var response = await _subGroupRepository.UpdateAsync(subGroup);
-        //            TempData["SuccessMessage"] = response.msg;
-        //        }
-        //        //return Ok();
-        //        return RedirectToAction("Index", "SubGroup", new { id = 0 });
+        //        return View(userGroup);
         //    }
-        //    catch (Exception ex)
+
+        //    var userID = Convert.ToInt32(TempData["UserId"]);
+        //    if (userGroup.groupId == 0)
         //    {
-        //        throw ex;
+        //        userGroup.createdBy = Convert.ToInt32(userID);
+        //        var response =  await _userGroupRepository.InsertAsync(userGroup);
+        //        TempData["SuccessMessage"] = response.msg;
         //    }
+        //    else
+        //    {
+        //        userGroup.updatedBy = Convert.ToInt32(userID);
+        //        var response = await _userGroupRepository.UpdateAsync(userGroup);
+        //        TempData["SuccessMessage"] = response.msg;
+        //    }
+
+        //    //return Ok();
+        //    return RedirectToAction("Index", "UserGroup", new { id = 0 });
+
         //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(SubGroup subGroup)
+        public async Task<IActionResult> Save(UserGroup userGroup)
         {
             //Model validation (Data Annotations)
             if (!ModelState.IsValid)
@@ -106,12 +97,12 @@ namespace ProdAuditApp.UI.Controllers
             {
                 ITMessage response;
 
-                if (subGroup.subgroupid == 0 || subGroup.subgroupid == null)
+                if (userGroup.groupId == 0 || userGroup.groupId == null)
                 {
                     //Insert Validation
-                    subGroup.createdby = userId;
+                    userGroup.createdBy = userId;
 
-                    response = await _subGroupRepository.InsertAsync(subGroup);
+                    response = await _userGroupRepository.InsertAsync(userGroup);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -122,9 +113,9 @@ namespace ProdAuditApp.UI.Controllers
                 else
                 {
                     // 4️⃣ Update Validation
-                    subGroup.updatedby = userId;
+                    userGroup.updatedBy = userId;
 
-                    response = await _subGroupRepository.UpdateAsync(subGroup);
+                    response = await _userGroupRepository.UpdateAsync(userGroup);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -134,7 +125,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "SubGroup");
+                return RedirectToAction("Index", "UserGroup");
             }
             catch (Exception ex)
             {
@@ -145,18 +136,8 @@ namespace ProdAuditApp.UI.Controllers
             }
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> Delete(SubGroup subGroup)
-        //{
-        //    var userID = Convert.ToInt32(TempData["UserId"]);
-        //    subGroup.updatedby = Convert.ToInt32(userID);
-        //    var response = await _subGroupRepository.DeleteAsync(subGroup);
-        //    TempData["SuccessMessage"] = response.msg;
-        //    return RedirectToAction("Index", "SubGroup", new { id = 0 });
-        //}
-
         [HttpPost]
-        public async Task<IActionResult> Delete(SubGroup subGroup)
+        public async Task<IActionResult> Delete(UserGroup userGroup)
         {
 
             //Model validation (Data Annotations)
@@ -184,8 +165,8 @@ namespace ProdAuditApp.UI.Controllers
                 ITMessage response;
 
                 //var userID = Convert.ToInt32(TempData["UserId"]);
-                subGroup.updatedby = Convert.ToInt32(userId);
-                response = await _subGroupRepository.DeleteAsync(subGroup);
+                userGroup.updatedBy = Convert.ToInt32(userId);
+                response = await _userGroupRepository.DeleteAsync(userGroup);
 
                 if (response == null || response.i_IDENTITY <= 0)
                 {
@@ -194,7 +175,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "SubGroup", new { id = 0 });
+                return RedirectToAction("Index", "UserGroup", new { id = 0 });
             }
             catch (Exception ex)
             {

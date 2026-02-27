@@ -1,6 +1,6 @@
 ﻿@using ProdAuditApp.Data.Model.Domain
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
-@model ProductionHouse
+@model SubGroup
 @{
     ViewData["Title"] = ViewData["MasterCode"];
     Layout = "_ContentNavbarLayout";
@@ -35,70 +35,68 @@
     <div class="col-xxl">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="mb-0">Production House</h5>
-                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Production House" })">Back to Search</a>
+                <h5 class="mb-0">Sub Group</h5>
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Sub Group" })">Back to Search</a>
             </div>
             <div class="card-body">
-                <form asp-action="Save" asp-controller="ProductionHouse" method="post">
+                <form asp-action="Save" asp-controller="SubGroup" method="post">
                     <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtProductionHouseCode">Production House Code</label>
+                        <label class="col-sm-2 col-form-label" for="cmbGroup">Group</label>
                         <div class="col-sm-4">
-                            <input type="text" asp-for="phCode" class="form-control" id="txtProductionHouseCode" placeholder="Production House Code" />
+                            <select asp-for="groupid"
+                                    asp-items="ViewBag.GroupList"
+                                    class="form-control">
+                                <option value="">-- Select Group --</option>
+                            </select>
                         </div>
                     </div>
                     <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtProductionName">Production House Name</label>
+                        <label class="col-sm-2 col-form-label" for="txtSubGroupCode">Sub Group Code</label>
                         <div class="col-sm-4">
-                            <input type="text" asp-for="phName" class="form-control" id="txtProductionName" placeholder="Production House Name" />
+                            <input type="text" asp-for="subgroupcode" class="form-control" id="txtSubGroupCode" placeholder="Sub Group Code" />
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtSubGroupName">Sub Group Name</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="subgroupname" class="form-control" id="txtSubGroupName" placeholder="Sub Group Name" />
                         </div>
                     </div>
 
                     <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtContactPerson">Contact Person</label>
+                        <label class="col-sm-2 col-form-label" for="cmbCategory">Category</label>
                         <div class="col-sm-4">
-                            <input type="text" asp-for="contactPerson" class="form-control" id="txtContactPerson" placeholder="Contact Person" />
+                            <select asp-for="categoryid"
+                                    asp-items="ViewBag.CategoryList"
+                                    class="form-control">
+                                <option value="">-- Select Category --</option>
+                            </select>
                         </div>
                     </div>
+                    
                     <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtAddress">Address</label>
+                        <label class="col-sm-2 col-form-label" for="txtSubGroupDesc">Description</label>
                         <div class="col-sm-4">
-                            <input type="text" asp-for="address" class="form-control" id="txtAddress" placeholder="Address" />
+                            <input type="text" asp-for="subgroupdesc" class="form-control" id="txtSubGroupDesc" placeholder="Sub Group Name" />
                         </div>
                     </div>
-                    <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtContact1">Contact 1</label>
-                        <div class="col-sm-4">
-                            <input type="text" asp-for="contact1" class="form-control" id="txtContact1" placeholder="Contact 1" />
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtClientName">Contact 2</label>
-                        <div class="col-sm-4">
-                            <input type="text" asp-for="contact2" class="form-control" id="txtContact2" placeholder="Contact 2" />
-                        </div>
-                    </div>
-                    <div class="row mb-4">
-                        <label class="col-sm-2 col-form-label" for="txtEmailId">Email ID</label>
-                        <div class="col-sm-4">
-                            <input type="text" asp-for="emailId" class="form-control" id="txtEmailId" placeholder="Email ID" />
-                        </div>
-                    </div>
+
                     <div class="row mb-4">
                         <div class="col-sm-4">
-                            <input type="hidden" asp-for="phId" id="hdnClientId" />
+                            <input type="hidden" asp-for="subgroupid" id="hdnSubGroupId" />
                         </div>
                     </div>
                     <div class="row justify-content-end">
                         <div class="col-sm-10">
                             <button id="btnSave" type="submit" class="btn btn-primary">Save</button>
                             <button id="btnCancel" asp-action="Index" class="btn btn-primary">Cancel</button>
-                            @if (Model?.phId > 0)
+                            @if (Model?.subgroupid > 0)
                             {
                                 <button type="submit"
-                                        formaction="@Url.Action("Delete", "ProductionHouse")"
+                                        formaction="@Url.Action("Delete", "SubGroup")"
                                         formmethod="post"
                                         class="btn btn-danger"
-                                        onclick="return confirm('Are you sure you want to delete this Production House?');">
+                                        onclick="return confirm('Are you sure you want to delete this Sub Group?');">
                                     Delete
                                 </button>
                             }
