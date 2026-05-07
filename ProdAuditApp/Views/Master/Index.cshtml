@@ -1,8 +1,13 @@
-﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = ViewData["MasterCode"];
     Layout = "_ContentNavbarLayout";
     var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+    var controllerName = (masterCode ?? string.Empty).Replace(" ", "");
+    if (string.Equals(controllerName, "Project", StringComparison.OrdinalIgnoreCase))
+    {
+        controllerName = "Projects";
+    }
 }
 
 
@@ -14,7 +19,7 @@
         <h5 class="card-title m-0 me-2">@masterCode</h5>
         <div class="d-flex gap-2 align-items-center">
             <div class="input-group input-group-merge" style="max-width: 500px;">
-                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("Index", @masterCode.Replace(" ", ""))?Id=0'">
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("Index", controllerName)?Id=0'">
                     <i class="icon-base ri ri-search-line me-1"></i>
                     Add New
                 </button>&nbsp;&nbsp;

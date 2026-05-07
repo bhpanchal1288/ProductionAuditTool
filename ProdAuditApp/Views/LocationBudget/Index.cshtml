@@ -1,0 +1,213 @@
+﻿@using ProdAuditApp.Data.Model.Domain
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@model LocationBudget
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            const alertNode = document.getElementById('successAlert');
+            if (alertNode) {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertNode);
+                alert.close();
+            }
+        }, 5000); // 15 seconds
+    </script>
+}
+
+@{
+    TempData.Remove("SuccessMessage");
+}
+
+@* ************** Content ************** *@
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="col-xxl">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    Location Budget@(string.IsNullOrWhiteSpace(ViewBag.ProjectName as string) ? "" : $" - {ViewBag.ProjectName}")
+                </h5>
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Location Budget" })">Back to Search</a>
+            </div>
+            <div class="card-body">
+                <form asp-action="Save" asp-controller="LocationBudget" method="post">
+                    
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtLocationName">Location Name</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="locationname" class="form-control" id="txtLocationName" placeholder="Location Name" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="cmbLocationType">Location Type</label>
+                        <div class="col-sm-4">
+                            <select asp-for="locationtypeid"
+                                    asp-items="ViewBag.LocationTypeList"
+                                    class="form-control"
+                                    id="cmbLocationType">
+                                <option value="">-- Select Location Type --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtAddress">Address</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="address" class="form-control" id="txtAddress" placeholder="Address" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtAddress">Shoot Days</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="shootdays" class="form-control" id="txtShootDays" placeholder="Shoot Days" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtBudgetCost">Budget Cost</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="budgetcost" class="form-control" id="txtBudgetCost" placeholder="Budget Cost" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-sm-4">
+                            <input type="hidden" asp-for="locationbudgetid" id="hdnLocationBudgetId" />
+                            <input type="hidden" asp-for="projectid" id="hdnProjectId" />
+                        </div>
+                    </div>
+                    <div class="row justify-content-end">
+                        <div class="col-sm-10">
+                            <button id="btnSave" type="submit" class="btn btn-primary">Save</button>
+                            <button id="btnCancel" asp-action="Index" asp-route-Id="@Model.projectid" class="btn btn-primary">Cancel</button>
+                            @* @if (Model?.locationbudgetid > 0)
+                            {
+                                <button type="submit"
+                                        formaction="@Url.Action("Delete", "LocationBudget")"
+                                        formmethod="post"
+                                        class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete record?');">
+                                    Delete
+                                </button>
+                            } *@
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <br />
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive text-nowrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Location Name</th>
+                                <th>Location Type</th>
+                                <th>Shoot Days</th>
+                                <th>Budget Cost</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var locationbudgetList = ViewBag.LocationBudgetList as List<LocationBudget>;
+                            }
+
+                            @if (locationbudgetList != null && locationbudgetList.Count > 0)
+                            {
+                                foreach (var item in locationbudgetList)
+                                {
+                                    <tr>
+                                        <td>@item.locationname</td>
+                                        <td>@item.locationtype</td>
+                                        <td>@item.shootdays</td>
+                                        <td>@item.budgetcost</td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary me-2"
+                                                    onclick="editLocationBudget(@item.locationbudgetid, @item.projectid, '@(item.locationname ?? string.Empty)', @item.locationtypeid, '@(item.address ?? string.Empty)', @item.shootdays, @item.budgetcost)">
+                                                Edit
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="deleteLocationBudget(@item.locationbudgetid)">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-body-secondary">
+                                        No mapping records found.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+            async function editLocationBudget(locationbudgetid, projectid, locationname, locationtypeid, address, shootdays, budgetcost) {
+                const locationNameInput = document.getElementById('txtLocationName');
+                const locationTypeSelect = document.getElementById('cmbLocationType');
+                const addressInput = document.getElementById('txtAddress');
+                const shootDaysInput = document.getElementById('txtShootDays');
+                const budgetCostInput = document.getElementById('txtBudgetCost');
+                const locationBudgetIdInput = document.getElementById('hdnLocationBudgetId');
+                const projectIdInput = document.getElementById('hdnProjectId');
+
+                if (locationNameInput) locationNameInput.value = locationname || '';
+                if (locationTypeSelect) locationTypeSelect.value = locationtypeid || '';
+                if (addressInput) addressInput.value = address || '';
+                if (shootDaysInput) shootDaysInput.value = shootdays || '';
+                if (budgetCostInput) budgetCostInput.value = budgetcost || '';
+                if (locationBudgetIdInput) locationBudgetIdInput.value = locationbudgetid || '';
+                if (projectIdInput) projectIdInput.value = projectid || '';
+
+                // scroll to top form
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            function deleteLocationBudget(locationbudgetId) {
+                if (!locationbudgetId) return;
+                const locationbudgetIdInput = document.getElementById('hdnLocationBudgetId');
+                if (locationbudgetIdInput) locationbudgetIdInput.value = locationbudgetId;
+
+                if (confirm('Are you sure you want to delete this Mapping?')) {
+                    // submit the existing form with its delete action (if wired in controller)
+                    const form = document.querySelector('form[asp-controller="LocationBudget"], form[action*="/LocationBudget"]') || document.querySelector('form');
+                    if (form) {
+                        form.action = '@Url.Action("Delete", "LocationBudget")';
+                        form.method = 'post';
+                        form.submit();
+                    }
+                }
+            }
+    </script>
+</div>
+

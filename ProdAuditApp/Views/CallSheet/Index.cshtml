@@ -1,0 +1,296 @@
+@using ProdAuditApp.Data.Model.Domain
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@model CallSheet
+
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            const alertNode = document.getElementById('successAlert');
+            if (alertNode) {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertNode);
+                alert.close();
+            }
+        }, 5000); // 15 seconds
+    </script>
+}
+
+@{
+    TempData.Remove("SuccessMessage");
+}
+
+<div class="card">
+<div class="col-xxl">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="mb-0">
+            CallSheet
+        </h5>
+        <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "CallSheet" })">Back to Search</a>
+    </div>
+    <div class="card-body">
+        <form asp-action="Save" asp-controller="CallSheet" method="post">
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Reporting Date</label>
+                <div class="col-sm-4">
+                    <input type="date" id="txtReportingDate" asp-for="reportingdate" name="ReportingDate" class="form-control" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">Project Name</label>
+                <div class="col-sm-4">
+                    <select asp-for="projectid"
+                            asp-items="ViewBag.ProjectList"
+                            class="form-control"
+                            id="cmbProject"
+                            onchange="loadLocation()">
+                        <option value="">-- Select Project --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Location</label>
+                <div class="col-sm-4">
+                    <select asp-for="locationid"
+                            asp-items="ViewBag.LocationList"
+                            class="form-control"
+                            id="cmbLocation">
+                        <option value="">-- Select Location --</option>
+                    </select>
+                </div>
+
+                <label class="col-sm-2 col-form-label">Shift</label>
+                <div class="col-sm-4">
+                    <select asp-for="shiftid"
+                            asp-items="ViewBag.ShiftList"
+                            class="form-control"
+                            id="cmbShift">
+                        <option value="">-- Select Shift --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Sunrise</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtSunrise" asp-for="sunrise" name="Sunrise" class="form-control" placeholder="Sunrise" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">Sunset</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtSunset" asp-for="sunset" name="Sunset" class="form-control" placeholder="Sunset" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Weather</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtWeather" asp-for="weather" name="Weather" class="form-control" placeholder="Weather" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">Breakfast</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtBreakfast" asp-for="breakfast" name="Breakfast" class="form-control" placeholder="Breakfast" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Lunch</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtLunch" asp-for="lunch" name="Lunch" class="form-control" placeholder="Lunch" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">Shift Start Time</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtShiftStartTime" asp-for="shiftstarttime" name="ShiftStartTime" class="form-control" placeholder="Shift Start Time" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Shift End Time</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtShiftEndTime" asp-for="shiftendtime" name="ShiftEndTime" class="form-control" placeholder="Shift End Time" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">Roll Time</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtRollTime" asp-for="rolltime" name="RollTime" class="form-control" placeholder="Roll Time" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Call Time</label>
+                <div class="col-sm-4">
+                    <input type="text" id="txtCallTime" asp-for="calltime" name="CallTime" class="form-control" placeholder="Call Time" />
+                </div>
+
+                <label class="col-sm-2 col-form-label">No. of Scenes</label>
+                <div class="col-sm-4">
+                    <input type="number" id="txtNumberOfScenes" asp-for="noofscenes" class="form-control" placeholder="No. of Scenes" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Nearest Hospital</label>
+                <div class="col-sm-10">
+                    <textarea id="txtNearestHospital" asp-for="nearesthospital" name="NearestHospital" class="form-control" rows="3" placeholder="Nearest Hospital"></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Additional Notes</label>
+                <div class="col-sm-10">
+                    <textarea id="txtAdditionalNotes" asp-for="additionalnotes" name="AdditionalNotes" class="form-control" rows="4" placeholder="Additional Notes"></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-sm-4">
+                    <input type="hidden" asp-for="callsheetid" id="hdnCallSheetId" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-10 offset-sm-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button id="btnCancel" asp-action="Index" class="btn btn-primary">Cancel</button>
+                    @if (Model?.callsheetid > 0)
+                    {
+                        <button type="submit"
+                                formaction="@Url.Action("Delete", "CallSheet")"
+                                formmethod="post"
+                                class="btn btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this CallSheet?');">
+                            Delete
+                        </button>
+                    }
+                    @* <a asp-action="Index" asp-controller="Reports" class="btn btn-secondary ms-2">Cancel</a> *@
+                </div>
+            </div>
+        </form>
+
+                
+                
+
+    </div>
+            <div class="card">
+                <div class="col-xxl">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">
+                        CallSheet Details
+                    </h5>
+                    @* <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "CallSheet" })">Back to Search</a> *@
+                </div>
+                <div class="card-body">
+                    <!-- Tabs: Crew, Equipments, Costumes, Food, Vehicles & Generators -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <ul class="nav nav-tabs" id="callsheetTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="crew-tab" data-bs-toggle="tab" data-bs-target="#crew" type="button" role="tab" aria-controls="crew" aria-selected="true">Crew</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="equipments-tab" data-bs-toggle="tab" data-bs-target="#equipments" type="button" role="tab" aria-controls="equipments" aria-selected="false">Equipments</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="costumes-tab" data-bs-toggle="tab" data-bs-target="#costumes" type="button" role="tab" aria-controls="costumes" aria-selected="false">Costumes</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="food-tab" data-bs-toggle="tab" data-bs-target="#food" type="button" role="tab" aria-controls="food" aria-selected="false">Food</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab" aria-controls="vehicles" aria-selected="false">Vehicles & Generators</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content border border-top-0 p-3" id="callsheetTabsContent">
+                                <div class="tab-pane fade show active" id="crew" role="tabpanel" aria-labelledby="crew-tab">
+                                    <div class="mb-2">
+                                        <label class="form-label">Crew Notes</label>
+                                        <textarea name="CrewNotes" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="equipments" role="tabpanel" aria-labelledby="equipments-tab">
+                                    <div class="mb-2">
+                                        <label class="form-label">Equipments</label>
+                                        <textarea name="Equipments" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="costumes" role="tabpanel" aria-labelledby="costumes-tab">
+                                    <div class="mb-2">
+                                        <label class="form-label">Costumes</label>
+                                        <textarea name="Costumes" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="food" role="tabpanel" aria-labelledby="food-tab">
+                                    <div class="mb-2">
+                                        <label class="form-label">Food</label>
+                                        <textarea name="Food" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="vehicles" role="tabpanel" aria-labelledby="vehicles-tab">
+                                    <div class="mb-2">
+                                        <label class="form-label">Vehicles</label>
+                                        <textarea name="Vehicles" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script>
+                    async function loadLocation() {
+                        const projectSelect = document.getElementById('cmbProject');
+                        const locationSelect = document.getElementById('cmbLocation');
+                        if (!projectSelect || ! locationSelect) return;
+
+                        const projectId = projectSelect.value || 0;
+                
+                        // Preserve current selection when reloading options (edit scenarios)
+                        const previousLocationId = locationSelect.value;
+
+                        // Reset options
+                        locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+                        if (!projectSelect || projectSelect === '0') return;
+
+                        const url = '@Url.Action("GetLocationDropdownData", "Callsheet")'
+                            + '?projectid=' + encodeURIComponent(projectId);
+                        const response = await fetch(url, { method: 'GET' });
+                        if (!response.ok) return;
+
+                        const items = await response.json();
+                        for (const item of items) {
+                            const opt = document.createElement('option');
+                            opt.value = item.valueId;
+                            opt.textContent = item.valueDec;
+                            locationSelect.appendChild(opt);
+                        }
+
+                        // Restore prior value if it still exists
+                        if (previousLocationId) locationSelect.value = previousLocationId;
+                    }
+
+                    document.addEventListener('DOMContentLoaded', () => {
+                        loadLocation();
+                        // calculateGrandTotal();
+                    });
+            </script>
+        </div>
+    </div>
+</div>

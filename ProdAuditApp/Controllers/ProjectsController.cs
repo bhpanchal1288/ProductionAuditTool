@@ -1,27 +1,35 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ProdAuditApp.Data.Model.Domain;
-using ProdAuditApp.Data.Repository.SubGroupRepository;
-using ProdAuditApp.Data.Repository.UserRepository;
+using ProdAuditApp.Data.Repository.ProjectsRepository;
+
 
 namespace ProdAuditApp.UI.Controllers
 {
-    public class UserController : Controller
+    public class ProjectsController : Controller
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IProjectsRepository _projectRepository;
 
-        public UserController(IUserRepository userRepository)
+        public ProjectsController(IProjectsRepository projectRepository)
         {
-            _userRepository = userRepository;
+            _projectRepository = projectRepository;
         }
-        public async Task<IActionResult> Index(int Id)
+        [HttpGet]
+        public async Task<IActionResult> Index(int? id = null)
         {
-            var groupData = await _userRepository.GetUserGroupDropdownItemsAsync();
-            ViewBag.GroupList = new SelectList(groupData, "valueId", "valueDec");
+            var clientData = await _projectRepository.GetClientDropdownItemsAsync();
+            ViewBag.ClientList = new SelectList(clientData, "valueId", "valueDec");
 
-            if (Id != 0)
+            var productionHouseData = await _projectRepository.GetProductionHouseDropdownItemsAsync();
+            ViewBag.ProductionHouseList = new SelectList(productionHouseData, "valueId", "valueDec");
+
+            var projectTypeData = await _projectRepository.GetProjectTypeDropdownItemsAsync();
+            ViewBag.ProjectTypeList = new SelectList(projectTypeData, "valueId", "valueDec");
+
+
+            if (id.HasValue && id.Value != 0)
             {
-                var data = await _userRepository.GetByIdAsync(Id);
+                var data = await _projectRepository.GetByIdAsync(id.Value);
                 if (data == null)
                 {
                     return NotFound();
@@ -35,36 +43,9 @@ namespace ProdAuditApp.UI.Controllers
             }
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> Save(User user)
-        //{
-        //    try
-        //    {
-        //        var userID = Convert.ToInt32(TempData["UserId"]);
-        //        if (user.userid == 0)
-        //        {
-        //            user.createdby = Convert.ToInt32(userID);
-        //            await _userRepository.InsertAsync(user);
-        //            TempData["SuccessMessage"] = "User created successfully.";
-        //        }
-        //        else
-        //        {
-        //            user.updatedby = Convert.ToInt32(userID);
-        //            await _userRepository.UpdateAsync(user);
-        //            TempData["SuccessMessage"] = "User updated successfully.";
-        //        }
-        //        //return Ok();
-        //        return RedirectToAction("Index", "User", new { id = 0 });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw ex;
-        //    }
-        //}
-
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Save(User user)
+        public async Task<IActionResult> Save(Projects project)
         {
             //Model validation (Data Annotations)
             if (!ModelState.IsValid)
@@ -90,12 +71,12 @@ namespace ProdAuditApp.UI.Controllers
             {
                 ITMessage response;
 
-                if (user.userid == 0 || user.userid == null)
+                if (project.projectId == 0 || project.projectId == null)
                 {
                     //Insert Validation
-                    user.createdby = userId;
+                    project.createdBy = userId;
 
-                    response = await _userRepository.InsertAsync(user);
+                    response = await _projectRepository.InsertAsync(project);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -106,9 +87,9 @@ namespace ProdAuditApp.UI.Controllers
                 else
                 {
                     // 4️⃣ Update Validation
-                    user.updatedby = userId;
+                    project.updatedBy = userId;
 
-                    response = await _userRepository.UpdateAsync(user);
+                    response = await _projectRepository.UpdateAsync(project);
 
                     if (response == null || response.i_IDENTITY <= 0)
                     {
@@ -118,7 +99,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "User");
+                return RedirectToAction("Index", "Projects");
             }
             catch (Exception ex)
             {
@@ -130,7 +111,7 @@ namespace ProdAuditApp.UI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(User user)
+        public async Task<IActionResult> Delete(Projects project)
         {
 
             //Model validation (Data Annotations)
@@ -158,8 +139,8 @@ namespace ProdAuditApp.UI.Controllers
                 ITMessage response;
 
                 //var userID = Convert.ToInt32(TempData["UserId"]);
-                user.updatedby = Convert.ToInt32(userId);
-                response = await _userRepository.DeleteAsync(user);
+                project.updatedBy = Convert.ToInt32(userId);
+                response = await _projectRepository.DeleteAsync(project);
 
                 if (response == null || response.i_IDENTITY <= 0)
                 {
@@ -168,7 +149,7 @@ namespace ProdAuditApp.UI.Controllers
                 }
 
                 TempData["SuccessMessage"] = response.msg;
-                return RedirectToAction("Index", "User", new { id = 0 });
+                return RedirectToAction("Index", "Projects", new { id = 0 });
             }
             catch (Exception ex)
             {

@@ -4,7 +4,6 @@ namespace ProdAuditApp.Data.Model.Domain
 {
     public class User
     {
-        [Required]
         public int? userid { get; set; }
         [Required]
         public int groupid { get; set; }
@@ -19,9 +18,9 @@ namespace ProdAuditApp.Data.Model.Domain
         [Required]
         public string password { get; set; }
         public int createdby { get; set; }
-        public DateTime createddate { get; set; }
+        public DateTime? createddate { get; set; }
         public int updatedby { get; set; }
-        public DateTime updateddate { get; set; }
+        public DateTime? updateddate { get; set; }
 
     }
 }

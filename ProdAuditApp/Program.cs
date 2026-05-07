@@ -9,8 +9,14 @@ using ProdAuditApp.Data.Repository.MasterConfigRepository;
 using ProdAuditApp.Data.Repository.DropdownRepository;
 using ProdAuditApp.Data.Repository.UserGroupRepository;
 using ProdAuditApp.Data.Repository.UserRepository;
+using ProdAuditApp.Data.Repository.ProjectsRepository;
+using ProdAuditApp.Data.Repository.MappingRepository;
+using ProdAuditApp.Data.Repository.BudgetRepository;
+using ProdAuditApp.Data.Repository.LocationBudgetRepository;
+using ProdAuditApp.Data.Repository.ContractsRepository;
 using ProdAuditApp.UI.Filters;
 using ProdAuditApp.UI.Middleware;
+using ProdAuditApp.Data.Repository.CallSheetRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +42,13 @@ builder.Services.AddScoped<IProductionHouseRepository, ProductionHouseRepository
 builder.Services.AddScoped<IVendorRepository, VendorRepository>();
 builder.Services.AddScoped<IUserGroupRepository, UserGroupRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProjectsRepository, ProjectsRepository>();
+builder.Services.AddScoped<IMappingRepository, MappingRepository>();
+builder.Services.AddScoped<IBudgetRepository, BudgetRepository>();
+builder.Services.AddScoped<ILocationBudgetRepository, LocationBudgetRepository>();
+builder.Services.AddScoped<IContractsRepository, ContractsRepository>();
+builder.Services.AddScoped<ICallSheetRepository, CallSheetRepository>();
+
 
 // Register Filters
 builder.Services.AddScoped<MenuDataFilter>();

@@ -1,0 +1,310 @@
+﻿@using ProdAuditApp.Data.Model.Domain
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@model Budget
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            const alertNode = document.getElementById('successAlert');
+            if (alertNode) {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertNode);
+                alert.close();
+            }
+        }, 5000); // 15 seconds
+    </script>
+}
+
+@{
+    TempData.Remove("SuccessMessage");
+}
+
+@* ************** Content ************** *@
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="col-xxl">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    Budget@(string.IsNullOrWhiteSpace(ViewBag.ProjectName as string) ? "" : $" - {ViewBag.ProjectName}") &nbsp;&nbsp; <label id="BudgetTotal" class="text-body-secondary float-end"></label>
+                </h5>
+
+                @* <label id="BudgetTotal" class="text-body-secondary float-end"></label> *@
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Budget" })">Back to Search</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive text-nowrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Category</th>
+                                <th>Sub Group</th>
+                                <th>Quantity</th>
+                                <th>Budget Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var mappingList = ViewBag.MappingList as List<Budget>;
+                            }
+
+                            @if (mappingList != null && mappingList.Count > 0)
+                            {
+                                foreach (var item in mappingList)
+                                {
+                                    <tr>
+                                        <td>@item.groupname</td>
+                                        <td>@item.category</td>
+                                        <td>@item.subgroupname</td>
+                                        @* <td>@item.quantity</td>
+                                        <td>@item.budgetcost</td> *@
+                                        <td>
+                                            <input type="number"
+                                                   class="form-control form-control-sm"
+                                                   id="qty_@item.mappingid"
+                                                   value="@item.quantity" />
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                   class="form-control form-control-sm"
+                                                   id="cost_@item.mappingid"
+                                                   value="@item.budgetcost" />
+                                        </td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary me-2"
+                                                    @* onclick="editBudget(@(item.budgetid ?? 0), @(item.mappingid ?? 0), @item.groupid, @item.subgroupcategoryid, @item.subgroupid, @item.quantity, @item.budgetcost, )"> *@
+                                                    onclick="saveBudget(
+                                                                @(item.budgetid ?? 0)
+                                                                , @(item.mappingid ?? 0)
+                                                                , @Model.projectid
+                                                                , document.getElementById('qty_@item.mappingid').value
+                                                                , document.getElementById('cost_@item.mappingid').value)">
+                                                Save
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="deleteBudget(
+                                                                    @(item.budgetid ?? 0)
+                                                                    , @(item.mappingid ?? 0)
+                                                                    , @Model.projectid
+                                                                    , document.getElementById('qty_@item.mappingid').value
+                                                                    , document.getElementById('cost_@item.mappingid').value)">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-body-secondary">
+                                        No mapping records found.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+            async function loadSubGroups() {
+                const groupSelect = document.getElementById('cmbGroup');
+                const categorySelect = document.getElementById('cmbCategory');
+                const subGroupSelect = document.getElementById('cmbSubGroup');
+                if (!groupSelect || !categorySelect || !subGroupSelect) return;
+
+                const groupId = groupSelect.value || 0;
+                const categoryId = categorySelect.value || 0;
+                
+                // Preserve current selection when reloading options (edit scenarios)
+                const previousSubGroupId = subGroupSelect.value;
+
+                // Reset options
+                subGroupSelect.innerHTML = '<option value="">-- Select Sub Group --</option>';
+                if (!groupId || groupId === '0' || !categoryId || categoryId === '0') return;
+
+                const url = '@Url.Action("GetSubGroupDropdownData", "Mapping")'
+                    + '?groupid=' + encodeURIComponent(groupId)
+                    + '&categoryid=' + encodeURIComponent(categoryId);
+                const response = await fetch(url, { method: 'GET' });
+                if (!response.ok) return;
+
+                const items = await response.json();
+                for (const item of items) {
+                    const opt = document.createElement('option');
+                    opt.value = item.valueId;
+                    opt.textContent = item.valueDec;
+                    subGroupSelect.appendChild(opt);
+                }
+
+                // Restore prior value if it still exists
+                if (previousSubGroupId) subGroupSelect.value = previousSubGroupId;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                loadSubGroups();
+                calculateGrandTotal();
+            });
+
+            async function editBudget(budgetId, mappingId, groupId, categoryId, subGroupId, quantity, budgetCost) {
+                const groupSelect = document.getElementById('cmbGroup');
+                const categorySelect = document.getElementById('cmbCategory');
+                const subGroupSelect = document.getElementById('cmbSubGroup');
+                const quantityInput = document.getElementById('txtQuantity');
+                const budgetCostInput = document.getElementById('txtBudgetCost');
+                const mappingIdInput = document.getElementById('hdnMappingId');
+                const budgetIdInput = document.getElementById('hdnBudgetId');
+                
+                if (mappingIdInput) mappingIdInput.value = mappingId || '';
+                if (groupSelect) groupSelect.value = groupId || '';
+                if (categorySelect) categorySelect.value = categoryId || '';
+                // if (quantityInput) quantityInput.value = quantity || '';
+                if (quantityInput) quantityInput.value = (quantity !== undefined && quantity !== null) ? quantity : '';
+                // if (budgetCostInput) budgetCostInput.value = budgetCost || '';
+                if (budgetCostInput) budgetCostInput.value = (budgetCost !== undefined && budgetCost !== null) ? budgetCost : '';
+
+
+                await loadSubGroups();
+                if (subGroupSelect) subGroupSelect.value = subGroupId || '';
+
+                // scroll to top form
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            async function saveBudget(budgetId, mappingId, projectId, quantity, budgetCost) {
+                const data = {
+                              budgetid: budgetId,
+                                mappingid: mappingId,
+                                projectid: projectId,
+                                projectname: null,
+                                groupid: null,
+                                groupname: null,
+                                subgroupcategoryid: null,
+                                category: null,
+                                subgroupid: null,
+                                subgroupname: null,
+                                quantity: parseFloat(quantity),
+                                budgetcost: parseFloat(budgetCost),
+                                createdBy: null,
+                                createdDate: null,
+                                updatedBy: null,
+                                updatedDate: null
+                }
+
+                try {
+                    const url = '@Url.Action("Save", "Budget")'
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        calculateGrandTotal();
+                        alert("Updated successfully");
+                    } else {
+                        alert("Update failed");
+                    }
+                    location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert("Error occurred");
+                }
+            }
+
+            function calculateGrandTotal() {
+                let total = 0;
+
+                document.querySelectorAll("[id^='cost_']").forEach((el) => {
+                    const val = parseFloat(el.value);
+                    if (!isNaN(val)) {
+                        total += val;
+                    }
+                });
+
+                document.getElementById("BudgetTotal").innerHTML = "Budget Cost: " + total.toFixed(2);
+            }
+
+            async function deleteBudget(budgetId, mappingId, projectId, quantity, budgetCost) {
+                if (!confirm('Are you sure you want to delete this record?')) {
+                    return; // stop if user clicks Cancel
+                }
+                const data = {
+                              budgetid: budgetId,
+                                mappingid: mappingId,
+                                projectid: projectId,
+                                projectname: null,
+                                groupid: null,
+                                groupname: null,
+                                subgroupcategoryid: null,
+                                category: null,
+                                subgroupid: null,
+                                subgroupname: null,
+                                quantity: parseFloat(quantity),
+                                budgetcost: parseFloat(budgetCost),
+                                createdBy: null,
+                                createdDate: null,
+                                updatedBy: null,
+                                updatedDate: null
+                }
+
+                try {
+                    const url = '@Url.Action("Delete", "Budget")'
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        calculateGrandTotal();
+                        alert("Deleted successfully");
+                    } else {
+                        alert("Deleted failed");
+                    }
+                    location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert("Error occurred");
+                }
+            }
+
+            // function deleteBudget(budgetId) {
+            //     if (!budgetId) return;
+            //     const budgetIdInput = document.getElementById('hdnbudgetId');
+            //     if (budgetIdInput) budgetIdInput.value = budgetId;
+
+            //     if (confirm('Are you sure you want to delete this budget?')) {
+            //         // submit the existing form with its delete action (if wired in controller)
+            //         const form = document.querySelector('form[asp-controller="Budget"], form[action*="/Budget"]') || document.querySelector('form');
+            //         if (form) {
+            //             form.action = '@Url.Action("Delete", "Budget")';
+            //             form.method = 'post';
+            //             form.submit();
+            //         }
+            //     }
+            // }
+    </script>
+</div>
+

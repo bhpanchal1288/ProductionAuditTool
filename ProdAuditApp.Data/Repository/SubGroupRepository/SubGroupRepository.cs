@@ -1,4 +1,4 @@
-﻿using ProdAuditApp.Data.DataAccess;
+using ProdAuditApp.Data.DataAccess;
 using ProdAuditApp.Data.Model.Domain;
 
 namespace ProdAuditApp.Data.Repository.SubGroupRepository
@@ -42,6 +42,22 @@ namespace ProdAuditApp.Data.Repository.SubGroupRepository
                     FormName = "BLANK",
                     expr1 = (string)null,
                     expr2 = (string)null,
+                    expr3 = (string)null,
+                    expr4 = (string)null,
+                    expr5 = (string)null
+                });
+            return result.ToList();
+        }
+
+        public async Task<IEnumerable<DropdownConfig>> GetSubGroupDropdownItemsAsync(int groupId, int categoryId)
+        {
+            var result = await _db.GetData<DropdownConfig, dynamic>("usp_Bind_DropDown"
+                , new
+                {
+                    cmbName = "SubGroup",
+                    FormName = "BLANK",
+                    expr1 = groupId,
+                    expr2 = categoryId,
                     expr3 = (string)null,
                     expr4 = (string)null,
                     expr5 = (string)null

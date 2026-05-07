@@ -1,0 +1,252 @@
+@using ProdAuditApp.Data.Model.Domain
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@model Mapping
+@{
+    ViewData["Title"] = ViewData["MasterCode"];
+    Layout = "_ContentNavbarLayout";
+    var masterCode = ViewData["MasterCode"] as string ?? @HttpContextAccessor.HttpContext.Request.Query["masterCode"].ToString();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            const alertNode = document.getElementById('successAlert');
+            if (alertNode) {
+                const alert = bootstrap.Alert.getOrCreateInstance(alertNode);
+                alert.close();
+            }
+        }, 5000); // 15 seconds
+    </script>
+}
+
+@{
+    TempData.Remove("SuccessMessage");
+}
+
+@* ************** Content ************** *@
+<!-- Basic Bootstrap Table -->
+<div class="card">
+    <div class="col-xxl">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">
+                    Mapping@(string.IsNullOrWhiteSpace(ViewBag.ProjectName as string) ? "" : $" - {ViewBag.ProjectName}")
+                </h5>
+                <a class="text-body-secondary float-end" href="@Url.Action("Index", "Master", new { masterCode = "Mapping" })">Back to Search</a>
+            </div>
+            <div class="card-body">
+                <form asp-action="Save" asp-controller="Mapping" method="post">
+                    
+                    
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtClient">Group</label>
+                        <div class="col-sm-4">
+                            <select asp-for="groupid"
+                                    asp-items="ViewBag.GroupList"
+                                    class="form-control"
+                                    id="cmbGroup"
+                                    onchange="loadSubGroups()">
+                                <option value="">-- Select Group --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtCategory">Category</label>
+                        <div class="col-sm-4">
+                            <select asp-for="subgroupcategoryid"
+                                    asp-items="ViewBag.SubGroupCategoryList"
+                                    class="form-control"
+                                    id="cmbCategory"
+                                    onchange="loadSubGroups()">
+                                <option value="">-- Select Category --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtProjectType">Sub Group</label>
+                        <div class="col-sm-4">
+                            <select asp-for="subgroupid"
+                                    asp-items="ViewBag.SubGroupList"
+                                    class="form-control"
+                                    id="cmbSubGroup">
+                                <option value="">-- Select Sub Group --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label" for="txtParticular">Particular</label>
+                        <div class="col-sm-4">
+                            <input type="text" asp-for="particulars" class="form-control" id="txtParticular" placeholder="Particular" />
+                        </div>
+                    </div>
+
+
+                    <div class="row mb-4">
+                        <div class="col-sm-4">
+                            <input type="hidden" asp-for="mappingid" id="hdnMappingId" />
+                            <input type="hidden" asp-for="projectid" id="hdnProjectId" />
+                        </div>
+                    </div>
+                    <div class="row justify-content-end">
+                        <div class="col-sm-10">
+                            <button id="btnSave" type="submit" class="btn btn-primary">Save</button>
+                            <button id="btnCancel" asp-action="Index" asp-route-Id="@Model.projectid" class="btn btn-primary">Cancel</button>
+                            @* @if (Model?.mappingid > 0)
+                            {
+                                <button type="submit"
+                                        formaction="@Url.Action("Delete", "Mapping")"
+                                        formmethod="post"
+                                        class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete this Mapping?');">
+                                    Delete
+                                </button>
+                            } *@
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <br />
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0">Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive text-nowrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Category</th>
+                                <th>Sub Group</th>
+                                <th>Particulars</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var mappingList = ViewBag.MappingList as List<Mapping>;
+                            }
+
+                            @if (mappingList != null && mappingList.Count > 0)
+                            {
+                                foreach (var item in mappingList)
+                                {
+                                    <tr>
+                                        <td>@item.groupname</td>
+                                        <td>@item.category</td>
+                                        <td>@item.subgroupname</td>
+                                        <td>@(item.particulars ?? "")</td>
+                                        <td>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary me-2"
+                                                    onclick="editMapping(@(item.mappingid ?? 0), @item.groupid, @item.subgroupcategoryid, @item.subgroupid, '@(item.particulars ?? string.Empty)')">
+                                                Edit
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="deleteMapping(@(item.mappingid ?? 0))">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-body-secondary">
+                                        No mapping records found.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+            async function loadSubGroups() {
+                const groupSelect = document.getElementById('cmbGroup');
+                const categorySelect = document.getElementById('cmbCategory');
+                const subGroupSelect = document.getElementById('cmbSubGroup');
+                if (!groupSelect || !categorySelect || !subGroupSelect) return;
+
+                const groupId = groupSelect.value || 0;
+                const categoryId = categorySelect.value || 0;
+
+                // Preserve current selection when reloading options (edit scenarios)
+                const previousSubGroupId = subGroupSelect.value;
+
+                // Reset options
+                subGroupSelect.innerHTML = '<option value="">-- Select Sub Group --</option>';
+                if (!groupId || groupId === '0' || !categoryId || categoryId === '0') return;
+
+                const url = '@Url.Action("GetSubGroupDropdownData", "Mapping")'
+                    + '?groupid=' + encodeURIComponent(groupId)
+                    + '&categoryid=' + encodeURIComponent(categoryId);
+                const response = await fetch(url, { method: 'GET' });
+                if (!response.ok) return;
+
+                const items = await response.json();
+                for (const item of items) {
+                    const opt = document.createElement('option');
+                    opt.value = item.valueId;
+                    opt.textContent = item.valueDec;
+                    subGroupSelect.appendChild(opt);
+                }
+
+                // Restore prior value if it still exists
+                if (previousSubGroupId) subGroupSelect.value = previousSubGroupId;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                loadSubGroups();
+            });
+
+            async function editMapping(mappingId, groupId, categoryId, subGroupId, particulars) {
+                const groupSelect = document.getElementById('cmbGroup');
+                const categorySelect = document.getElementById('cmbCategory');
+                const subGroupSelect = document.getElementById('cmbSubGroup');
+                const particularInput = document.getElementById('txtParticular');
+                const mappingIdInput = document.getElementById('hdnMappingId');
+
+                if (mappingIdInput) mappingIdInput.value = mappingId || '';
+                if (groupSelect) groupSelect.value = groupId || '';
+                if (categorySelect) categorySelect.value = categoryId || '';
+                if (particularInput) particularInput.value = particulars || '';
+
+                await loadSubGroups();
+                if (subGroupSelect) subGroupSelect.value = subGroupId || '';
+
+                // scroll to top form
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            function deleteMapping(mappingId) {
+                if (!mappingId) return;
+                const mappingIdInput = document.getElementById('hdnMappingId');
+                if (mappingIdInput) mappingIdInput.value = mappingId;
+
+                if (confirm('Are you sure you want to delete this Mapping?')) {
+                    // submit the existing form with its delete action (if wired in controller)
+                    const form = document.querySelector('form[asp-controller="Mapping"], form[action*="/Mapping"]') || document.querySelector('form');
+                    if (form) {
+                        form.action = '@Url.Action("Delete", "Mapping")';
+                        form.method = 'post';
+                        form.submit();
+                    }
+                }
+            }
+        </script>
+</div>
+
